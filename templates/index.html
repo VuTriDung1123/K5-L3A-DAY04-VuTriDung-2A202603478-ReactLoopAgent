@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status Investigation Agent · Dashboard & Live Demo</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked.js for Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Highlight.js for Code -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .prose-dark { color: #cbd5e1; }
+    .prose-dark h1, .prose-dark h2, .prose-dark h3, .prose-dark strong { color: #f8fafc; }
+    .prose-dark a { color: #38bdf8; text-decoration: underline; }
+    .prose-dark code { background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #38bdf8; font-size: 0.9em; }
+    .prose-dark pre code { background: transparent; padding: 0; color: inherit; }
+    .prose-dark ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+    .prose-dark ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+    .prose-dark hr { border-color: #334155; margin: 1.5rem 0; }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-sky-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-bold text-xl">
+          <i data-lucide="bot"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold text-white tracking-tight">Status Agent Dashboard</h1>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ReAct Loop</span>
+          </div>
+          <p class="text-xs text-slate-400">Day 04 · Vũ Trí Dũng (MSSV: 2A202603478)</p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Badges -->
+      <div class="flex items-center gap-2 text-xs">
+        <div class="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center space-x-2">
+          <span class="text-slate-400">Eval Lần 1:</span>
+          <span class="font-bold text-sky-400" id="badge-before">97.05/100</span>
+        </div>
+        <div class="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center space-x-2">
+          <span class="text-slate-400">Eval Lần 2:</span>
+          <span class="font-bold text-emerald-400" id="badge-after">98.18/100</span>
+        </div>
+        <div class="px-3 py-1.5 rounded-lg bg-indigo-950/60 border border-indigo-700/50 flex items-center space-x-2">
+          <span class="text-indigo-300">Bonus:</span>
+          <span class="font-bold text-amber-400" id="badge-bonus">+13.5/15 pts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-800/60">
+      <nav class="flex space-x-6">
+        <button onclick="switchTab('playground')" id="tab-btn-playground" class="tab-btn py-3 text-sm font-medium border-b-2 border-indigo-500 text-indigo-400 flex items-center space-x-2">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          <span>Hỏi Agent (Live Demo)</span>
+        </button>
+        <button onclick="switchTab('compare')" id="tab-btn-compare" class="tab-btn py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+          <i data-lucide="split" class="w-4 h-4"></i>
+          <span>So Sánh Trước / Sau</span>
+        </button>
+        <button onclick="switchTab('bonus')" id="tab-btn-bonus" class="tab-btn py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+          <i data-lucide="award" class="w-4 h-4"></i>
+          <span>Thử Thách Bonus (5 APIs)</span>
+        </button>
+        <button onclick="switchTab('notes')" id="tab-btn-notes" class="tab-btn py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          <span>Ghi Chú NOTES.md</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-y-auto">
+
+    <!-- ==================== TAB 1: PLAYGROUND ==================== -->
+    <div id="tab-playground" class="tab-content space-y-6">
+      <!-- Input & Controls Box -->
+      <div class="bg-slate-800/60 rounded-2xl border border-slate-700/80 p-5 shadow-xl">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
+          <h2 class="text-base font-semibold text-white flex items-center space-x-2">
+            <i data-lucide="terminal" class="w-5 h-5 text-indigo-400"></i>
+            <span>Interactive ReAct Agent Playground</span>
+          </h2>
+          <!-- Controls Panel -->
+          <div class="flex flex-wrap items-center gap-3 text-xs">
+            <!-- Tool Suite Toggle -->
+            <label class="flex items-center space-x-2 cursor-pointer bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700">
+              <input type="checkbox" id="bonus-toggle" class="rounded text-indigo-500 focus:ring-0 bg-slate-800 border-slate-600">
+              <span class="text-slate-300 font-medium">Bonus Tools (5 APIs)</span>
+            </label>
+            <!-- Mode Toggle -->
+            <select id="mode-select" class="bg-slate-900/80 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 font-medium focus:outline-none">
+              <option value="snapshot">Mode: Snapshot (Lab data)</option>
+              <option value="live">Mode: Live (Public Status API)</option>
+            </select>
+            <!-- Max Steps -->
+            <div class="flex items-center space-x-2 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700">
+              <span class="text-slate-400">Max steps:</span>
+              <span id="max-steps-val" class="font-bold text-indigo-400">8</span>
+              <input type="range" id="max-steps-slider" min="2" max="16" value="8" class="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('max-steps-val').innerText = this.value">
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt Input Field -->
+        <div class="relative">
+          <textarea id="question-input" rows="3" placeholder="Nhập câu hỏi điều tra trạng thái... (Ví dụ: 'GitHub Actions hiện có sự cố không? Hãy kiểm tra incident gần đây và dẫn nguồn.')"
+            class="w-full bg-slate-900/90 text-slate-100 placeholder-slate-500 rounded-xl border border-slate-700 p-4 pr-28 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"></textarea>
+          <button id="ask-btn" onclick="submitQuestion()" class="absolute right-3 bottom-3.5 px-4 py-2 bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white font-medium text-xs rounded-lg shadow-md shadow-indigo-500/20 flex items-center space-x-1.5 transition-all disabled:opacity-50">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Gửi câu hỏi</span>
+          </button>
+        </div>
+
+        <!-- Sample Quick Prompts -->
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span class="text-xs text-slate-400 font-medium flex items-center"><i data-lucide="sparkles" class="w-3 h-3 mr-1 text-amber-400"></i>Gợi ý câu hỏi:</span>
+          <button onclick="setPrompt(this.innerText)" class="px-2.5 py-1 text-xs rounded-md bg-slate-900 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors">GitHub Actions hiện có sự cố không? Hãy kiểm tra incident gần đây.</button>
+          <button onclick="setPrompt(this.innerText)" class="px-2.5 py-1 text-xs rounded-md bg-slate-900 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors">Cloudflare cache purge có incident nào liên quan không? CLB non-FedRAMP có bị ảnh hưởng không?</button>
+          <button onclick="setPrompt(this.innerText, true)" class="px-2.5 py-1 text-xs rounded-md bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/50 transition-colors">[Bonus] Kiểm tra status GitHub, Vercel và npm.</button>
+          <button onclick="setPrompt(this.innerText, true)" class="px-2.5 py-1 text-xs rounded-md bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/50 transition-colors">[Bonus] Đọc chi tiết timeline incident Vercel và xem có nhắc GitHub không.</button>
+        </div>
+      </div>
+
+      <!-- Execution Status & Loading State -->
+      <div id="loading-spinner" class="hidden bg-slate-800/40 rounded-xl border border-indigo-500/30 p-8 text-center animate-pulse">
+        <div class="inline-flex p-3 rounded-full bg-indigo-500/10 text-indigo-400 mb-3 animate-spin">
+          <i data-lucide="loader-2" class="w-6 h-6"></i>
+        </div>
+        <p class="text-sm font-semibold text-slate-200">ReAct Agent đang suy luận và thực thi tools...</p>
+        <p class="text-xs text-slate-400 mt-1">Đang gọi LLM $\rightarrow$ Gọi tools API $\rightarrow$ Trả kết quả observation $\rightarrow$ Kiểm tra bằng chứng</p>
+      </div>
+
+      <!-- Results Display -->
+      <div id="result-container" class="hidden space-y-6">
+        <!-- Agent Final Answer Card -->
+        <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-6 shadow-xl relative overflow-hidden">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-700/80 mb-4">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+              <h3 class="font-bold text-white text-base">Câu trả lời cuối cùng từ Agent</h3>
+            </div>
+            <div id="result-status-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              completed
+            </div>
+          </div>
+          <!-- Answer Markdown Output -->
+          <div id="result-answer" class="prose-dark leading-relaxed text-sm"></div>
+        </div>
+
+        <!-- ReAct Trace Timeline -->
+        <div class="bg-slate-800/60 rounded-2xl border border-slate-700/80 p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700/80">
+            <h3 class="font-bold text-white text-base flex items-center space-x-2">
+              <i data-lucide="git-commit" class="w-5 h-5 text-sky-400"></i>
+              <span>Nhật Ký Thực Thi ReAct (Execution Trace)</span>
+            </h3>
+            <span id="trace-count" class="text-xs text-slate-400">0 events</span>
+          </div>
+          <div id="trace-timeline" class="space-y-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: BEFORE VS AFTER COMPARISON ==================== -->
+    <div id="tab-compare" class="tab-content hidden space-y-6">
+      <!-- High Level Comparison Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+          <p class="text-xs text-slate-400">Điểm Lần 1 (eval_before)</p>
+          <p class="text-2xl font-bold text-sky-400 mt-1" id="stat-before-score">97.05</p>
+          <p class="text-xs text-slate-500 mt-1">20/22 case đạt 100 điểm</p>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+          <p class="text-xs text-slate-400">Điểm Lần 2 (eval_after)</p>
+          <p class="text-2xl font-bold text-emerald-400 mt-1" id="stat-after-score">98.18</p>
+          <p class="text-xs text-emerald-500/90 font-medium mt-1">Tăng +1.13 điểm tổng</p>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+          <p class="text-xs text-slate-400">Case H2 (Tối ưu chính)</p>
+          <div class="flex items-center space-x-2 mt-1">
+            <span class="text-red-400 font-bold line-through">50</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-400"></i>
+            <span class="text-2xl font-bold text-emerald-400">100</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Hết phạt thiếu tool get_status</p>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+          <p class="text-xs text-slate-400">Case H7 (Prompt Injection)</p>
+          <div class="flex items-center space-x-2 mt-1">
+            <span class="text-amber-400 font-bold line-through">85</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-400"></i>
+            <span class="text-2xl font-bold text-emerald-400">100</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Từ chối ép kết luận giả khi timeout</p>
+        </div>
+      </div>
+
+      <!-- Case Filters & Table -->
+      <div class="bg-slate-800/60 rounded-2xl border border-slate-700/80 p-5 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h3 class="font-bold text-white text-base flex items-center space-x-2">
+            <i data-lucide="table" class="w-5 h-5 text-indigo-400"></i>
+            <span>Bảng 22 Case Đánh Giá Chi Tiết</span>
+          </h3>
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-1.5 text-xs">
+            <button onclick="filterCases('all')" class="case-filter px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium">Tất cả (22)</button>
+            <button onclick="filterCases('improved')" class="case-filter px-3 py-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white font-medium">Đã cải tiến (H2, H7)</button>
+            <button onclick="filterCases('group-E')" class="case-filter px-3 py-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white font-medium">Nhóm E (6)</button>
+            <button onclick="filterCases('group-A')" class="case-filter px-3 py-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white font-medium">Nhóm A (8)</button>
+            <button onclick="filterCases('group-H')" class="case-filter px-3 py-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white font-medium">Nhóm H (8)</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+              <tr>
+                <th class="p-3">ID Case</th>
+                <th class="p-3">Câu hỏi tóm tắt</th>
+                <th class="p-3 text-center">Trước (Lần 1)</th>
+                <th class="p-3 text-center">Sau (Lần 2)</th>
+                <th class="p-3 text-center">Biến thiên</th>
+                <th class="p-3 text-right">Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody id="cases-table-body" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: BONUS CHALLENGE ==================== -->
+    <div id="tab-bonus" class="tab-content hidden space-y-6">
+      <div class="bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-sky-500/10 rounded-2xl border border-amber-500/30 p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold text-xs uppercase tracking-wide">Thử thách mở rộng</span>
+              <h2 class="text-lg font-bold text-white">Bonus Challenge: 5 Public Status APIs</h2>
+            </div>
+            <p class="text-xs text-slate-300 mt-1 max-w-2xl">
+              Hỗ trợ 5 nhà cung cấp: GitHub, Cloudflare, Vercel, npm, DigitalOcean. Xử lý timeline pagination, lỗi rate limit (429), lọc 160 mục nhiễu và chống prompt injection.
+            </p>
+          </div>
+          <div class="text-right bg-slate-900/80 px-5 py-3 rounded-xl border border-amber-500/40">
+            <p class="text-xs text-slate-400">Điểm Bonus Đạt Được</p>
+            <p class="text-2xl font-black text-amber-400" id="bonus-score-display">13.5 / 15 pts</p>
+            <p class="text-[11px] text-emerald-400">Tỷ lệ: 90.0% (10/10 scored)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bonus Cases Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="bonus-grid"></div>
+    </div>
+
+    <!-- ==================== TAB 4: NOTES.MD VIEWER ==================== -->
+    <div id="tab-notes" class="tab-content hidden space-y-6">
+      <div class="bg-slate-800/70 rounded-2xl border border-slate-700 p-8 shadow-xl">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-700 mb-6">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="file-check-2" class="w-6 h-6 text-indigo-400"></i>
+            <h2 class="text-lg font-bold text-white">Nội dung Ghi chú Phân tích (NOTES.md)</h2>
+          </div>
+          <span class="text-xs text-slate-400">Học viên: Vũ Trí Dũng (MSSV: 2A202603478)</span>
+        </div>
+        <div id="notes-content" class="prose-dark text-sm leading-relaxed max-w-none"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: CASE DETAIL COMPARISON -->
+  <div id="case-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-5xl max-h-[90vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <span id="modal-case-id" class="px-3 py-1 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold text-sm">Case H2</span>
+          <h3 id="modal-case-title" class="font-bold text-white text-base">Chi tiết so sánh case</h3>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <!-- Question & Expected -->
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-2 text-xs">
+          <div>
+            <span class="font-bold text-slate-300">Câu hỏi: </span>
+            <span id="modal-question" class="text-slate-200"></span>
+          </div>
+          <div>
+            <span class="font-bold text-slate-300">Expected: </span>
+            <span id="modal-expected" class="text-slate-400"></span>
+          </div>
+        </div>
+
+        <!-- Before vs After Columns -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- BEFORE COLUMN -->
+          <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-3">
+              <span class="font-bold text-sky-400 text-sm">Lần 1 (eval_before.json)</span>
+              <span id="modal-before-score" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-500/10 text-sky-400 border border-sky-500/30">50/100</span>
+            </div>
+            <div class="space-y-3 text-xs flex-1">
+              <div>
+                <p class="font-semibold text-slate-400 mb-1">Judge Reason:</p>
+                <p id="modal-before-reason" class="text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800"></p>
+              </div>
+              <div id="modal-before-violations-box">
+                <p class="font-semibold text-red-400 mb-1">Mechanical Violations:</p>
+                <p id="modal-before-violations" class="text-red-300 bg-red-950/30 p-2.5 rounded-lg border border-red-900/40"></p>
+              </div>
+              <div>
+                <p class="font-semibold text-slate-400 mb-1">Câu trả lời:</p>
+                <div id="modal-before-answer" class="text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 max-h-48 overflow-y-auto whitespace-pre-wrap"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AFTER COLUMN -->
+          <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-3">
+              <span class="font-bold text-emerald-400 text-sm">Lần 2 (eval_after.json)</span>
+              <span id="modal-after-score" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">100/100</span>
+            </div>
+            <div class="space-y-3 text-xs flex-1">
+              <div>
+                <p class="font-semibold text-slate-400 mb-1">Judge Reason:</p>
+                <p id="modal-after-reason" class="text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800"></p>
+              </div>
+              <div id="modal-after-violations-box">
+                <p class="font-semibold text-emerald-400 mb-1">Mechanical Violations:</p>
+                <p id="modal-after-violations" class="text-emerald-300 bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-900/40">Không có vi phạm</p>
+              </div>
+              <div>
+                <p class="font-semibold text-slate-400 mb-1">Câu trả lời:</p>
+                <div id="modal-after-answer" class="text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 max-h-48 overflow-y-auto whitespace-pre-wrap"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    let appData = { before: null, after: null, bonus: null, notes: '' };
+    let currentFilter = 'all';
+
+    // Initialize application
+    async function init() {
+      lucide.createIcons();
+      try {
+        const res = await fetch('/api/data');
+        appData = await res.json();
+        renderStats();
+        renderCasesTable();
+        renderBonusGrid();
+        renderNotes();
+      } catch (err) {
+        console.error('Lỗi nạp dữ liệu:', err);
+      }
+    }
+
+    // Switch Tabs
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-indigo-500', 'text-indigo-400');
+        btn.classList.add('border-transparent', 'text-slate-400');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        activeBtn.classList.add('border-indigo-500', 'text-indigo-400');
+      }
+      const activeContent = document.getElementById(`tab-${tabId}`);
+      if (activeContent) activeContent.classList.remove('hidden');
+
+      lucide.createIcons();
+    }
+
+    // Set sample prompt
+    function setPrompt(text, isBonus = false) {
+      document.getElementById('question-input').value = text;
+      document.getElementById('bonus-toggle').checked = isBonus;
+      document.getElementById('question-input').focus();
+    }
+
+    // Submit live question to Agent
+    async function submitQuestion() {
+      const input = document.getElementById('question-input');
+      const question = input.value.trim();
+      if (!question) return;
+
+      const bonus = document.getElementById('bonus-toggle').checked;
+      const mode = document.getElementById('mode-select').value;
+      const max_steps = parseInt(document.getElementById('max-steps-slider').value);
+
+      const askBtn = document.getElementById('ask-btn');
+      const spinner = document.getElementById('loading-spinner');
+      const resultBox = document.getElementById('result-container');
+
+      askBtn.disabled = true;
+      spinner.classList.remove('hidden');
+      resultBox.classList.add('hidden');
+
+      try {
+        const response = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, bonus, mode, max_steps })
+        });
+        const data = await response.json();
+        spinner.classList.add('hidden');
+        askBtn.disabled = false;
+
+        if (!data.ok) {
+          alert('Lỗi: ' + (data.error || 'Không thực thi được agent.'));
+          return;
+        }
+
+        renderAgentResult(data.result);
+      } catch (err) {
+        spinner.classList.add('hidden');
+        askBtn.disabled = false;
+        alert('Lỗi kết nối máy chủ: ' + err.message);
+      }
+    }
+
+    // Render live agent result
+    function renderAgentResult(result) {
+      const resultBox = document.getElementById('result-container');
+      const statusBadge = document.getElementById('result-status-badge');
+      const answerDiv = document.getElementById('result-answer');
+      const traceTimeline = document.getElementById('trace-timeline');
+      const traceCount = document.getElementById('trace-count');
+
+      resultBox.classList.remove('hidden');
+
+      // Status
+      statusBadge.innerText = result.status;
+      if (result.status === 'completed') {
+        statusBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+      } else {
+        statusBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30';
+      }
+
+      // Markdown answer
+      answerDiv.innerHTML = marked.parse(result.answer || '*(Không có câu trả lời)*');
+
+      // Trace Timeline
+      const trace = result.trace || [];
+      traceCount.innerText = `${trace.length} events`;
+      traceTimeline.innerHTML = '';
+
+      trace.forEach((ev, idx) => {
+        const item = document.createElement('div');
+        item.className = 'bg-slate-900/80 rounded-xl border border-slate-800 p-4 relative';
+
+        let badgeColor = 'bg-sky-500/20 text-sky-400 border-sky-500/30';
+        let iconName = 'wrench';
+        if (ev.event === 'error') {
+          badgeColor = 'bg-red-500/20 text-red-400 border-red-500/30';
+          iconName = 'alert-triangle';
+        } else if (ev.event === 'validation_missing_source') {
+          badgeColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+          iconName = 'link-2-off';
+        }
+
+        const argsStr = ev.arguments ? JSON.stringify(ev.arguments, null, 2) : '';
+        const resStr = ev.result ? JSON.stringify(ev.result, null, 2) : '';
+
+        item.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${badgeColor}">
+                Step ${ev.step || idx+1}: ${ev.event || 'tool'}
+              </span>
+              <span class="font-mono text-xs text-white font-semibold">${ev.name || ''}</span>
+            </div>
+            ${ev.result && ev.result.url ? `<a href="${ev.result.url}" target="_blank" class="text-xs text-sky-400 hover:underline flex items-center space-x-1"><i data-lucide="external-link" class="w-3 h-3"></i><span>${ev.result.url}</span></a>` : ''}
+          </div>
+          ${argsStr ? `
+            <div class="mt-2 text-xs">
+              <p class="text-[11px] text-slate-400 font-semibold mb-1">Arguments:</p>
+              <pre class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 overflow-x-auto text-slate-300 font-mono text-[11px]"><code>${argsStr}</code></pre>
+            </div>
+          ` : ''}
+          ${resStr ? `
+            <div class="mt-2 text-xs">
+              <p class="text-[11px] text-slate-400 font-semibold mb-1">Observation / Result:</p>
+              <pre class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 overflow-x-auto text-slate-300 font-mono text-[11px] max-h-48"><code>${resStr}</code></pre>
+            </div>
+          ` : ''}
+        `;
+        traceTimeline.appendChild(item);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Render Stats
+    function renderStats() {
+      if (appData.before && appData.before.summary) {
+        document.getElementById('badge-before').innerText = `${appData.before.summary.score_0_100}/100`;
+        document.getElementById('stat-before-score').innerText = `${appData.before.summary.score_0_100}`;
+      }
+      if (appData.after && appData.after.summary) {
+        document.getElementById('badge-after').innerText = `${appData.after.summary.score_0_100}/100`;
+        document.getElementById('stat-after-score').innerText = `${appData.after.summary.score_0_100}`;
+      }
+      if (appData.bonus && appData.bonus.summary) {
+        const bp = appData.bonus.summary.bonus_points_0_15 || 13.5;
+        document.getElementById('badge-bonus').innerText = `+${bp}/15 pts`;
+        document.getElementById('bonus-score-display').innerText = `${bp} / 15 pts`;
+      }
+    }
+
+    // Filter cases
+    function filterCases(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.case-filter').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-slate-900', 'text-slate-400');
+      });
+      event.target.classList.remove('bg-slate-900', 'text-slate-400');
+      event.target.classList.add('bg-indigo-600', 'text-white');
+      renderCasesTable();
+    }
+
+    // Render Cases Table
+    function renderCasesTable() {
+      const tbody = document.getElementById('cases-table-body');
+      tbody.innerHTML = '';
+
+      if (!appData.before || !appData.before.cases || !appData.after || !appData.after.cases) return;
+
+      const beforeMap = {};
+      appData.before.cases.forEach(c => beforeMap[c.id] = c);
+
+      appData.after.cases.forEach(afterCase => {
+        const id = afterCase.id;
+        const beforeCase = beforeMap[id] || {};
+
+        const beforeScore = beforeCase.grade ? beforeCase.grade.score : 0;
+        const afterScore = afterCase.grade ? afterCase.grade.score : 0;
+        const diff = afterScore - beforeScore;
+
+        // Apply filters
+        if (currentFilter === 'improved' && diff <= 0) return;
+        if (currentFilter === 'group-E' && !id.startsWith('E')) return;
+        if (currentFilter === 'group-A' && !id.startsWith('A')) return;
+        if (currentFilter === 'group-H' && !id.startsWith('H')) return;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors cursor-pointer';
+        tr.onclick = () => openCaseModal(id);
+
+        let diffBadge = `<span class="text-slate-500 font-medium">0</span>`;
+        if (diff > 0) {
+          diffBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">+${diff}</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-white font-mono flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full ${afterScore === 100 ? 'bg-emerald-400' : 'bg-amber-400'}"></span>
+            <span>${id}</span>
+          </td>
+          <td class="p-3 text-slate-300 max-w-md truncate" title="${afterCase.question}">${afterCase.question}</td>
+          <td class="p-3 text-center font-semibold text-slate-300">${beforeScore}</td>
+          <td class="p-3 text-center font-bold text-emerald-400">${afterScore}</td>
+          <td class="p-3 text-center">${diffBadge}</td>
+          <td class="p-3 text-right">
+            <button onclick="openCaseModal('${id}'); event.stopPropagation();" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs flex items-center justify-end space-x-1 ml-auto">
+              <span>Đối chiếu</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Open Case Detail Modal
+    function openCaseModal(caseId) {
+      if (!appData.before || !appData.after) return;
+      const bCase = appData.before.cases.find(c => c.id === caseId) || {};
+      const aCase = appData.after.cases.find(c => c.id === caseId) || {};
+
+      document.getElementById('modal-case-id').innerText = `Case ${caseId}`;
+      document.getElementById('modal-question').innerText = aCase.question || bCase.question || '';
+      document.getElementById('modal-expected').innerText = aCase.expected || bCase.expected || '';
+
+      // Before
+      const bScore = bCase.grade ? bCase.grade.score : 0;
+      document.getElementById('modal-before-score').innerText = `${bScore}/100`;
+      document.getElementById('modal-before-reason').innerText = (bCase.grade && bCase.grade.reason) || 'Không có ghi chú.';
+      const bViolations = (bCase.grade && bCase.grade.mechanical && bCase.grade.mechanical.violations) || [];
+      if (bViolations.length > 0) {
+        document.getElementById('modal-before-violations').innerText = bViolations.join(', ');
+        document.getElementById('modal-before-violations-box').classList.remove('hidden');
+      } else {
+        document.getElementById('modal-before-violations-box').classList.add('hidden');
+      }
+      document.getElementById('modal-before-answer').innerText = (bCase.result && bCase.result.answer) || '(Trống)';
+
+      // After
+      const aScore = aCase.grade ? aCase.grade.score : 0;
+      document.getElementById('modal-after-score').innerText = `${aScore}/100`;
+      document.getElementById('modal-after-reason').innerText = (aCase.grade && aCase.grade.reason) || 'Không có ghi chú.';
+      const aViolations = (aCase.grade && aCase.grade.mechanical && aCase.grade.mechanical.violations) || [];
+      if (aViolations.length > 0) {
+        document.getElementById('modal-after-violations').innerText = aViolations.join(', ');
+      } else {
+        document.getElementById('modal-after-violations').innerText = 'Hoàn hảo: Không có vi phạm cơ học.';
+      }
+      document.getElementById('modal-after-answer').innerText = (aCase.result && aCase.result.answer) || '(Trống)';
+
+      document.getElementById('case-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('case-modal').classList.add('hidden');
+    }
+
+    // Render Bonus Grid
+    function renderBonusGrid() {
+      const grid = document.getElementById('bonus-grid');
+      grid.innerHTML = '';
+      if (!appData.bonus || !appData.bonus.cases) return;
+
+      appData.bonus.cases.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800/60 rounded-xl border border-slate-700/80 p-5 space-y-3';
+        const score = c.grade ? c.grade.score : 0;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold text-xs">${c.id}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${score === 100 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-sky-500/10 text-sky-400 border border-sky-500/30'}">${score}/100</span>
+          </div>
+          <div>
+            <p class="font-semibold text-white text-xs">${c.question}</p>
+            <p class="text-[11px] text-slate-400 mt-1"><strong class="text-slate-300">Expected:</strong> ${c.expected}</p>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800 text-xs">
+            <p class="text-[11px] text-slate-400 font-semibold mb-1">Judge Feedback:</p>
+            <p class="text-slate-300">${c.grade && c.grade.reason ? c.grade.reason : ''}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // Render Notes
+    function renderNotes() {
+      const div = document.getElementById('notes-content');
+      if (appData.notes) {
+        div.innerHTML = marked.parse(appData.notes);
+      } else {
+        div.innerHTML = '<p class="text-slate-500">Chưa tải được NOTES.md</p>';
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
+
