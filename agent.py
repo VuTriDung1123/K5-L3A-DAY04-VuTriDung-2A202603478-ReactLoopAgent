@@ -48,8 +48,10 @@ def _tool_result_from_call(call, tools):
 
 def run_agent(question, provider, tools, max_steps=6):
     """Trả dict: status, answer, trace, usage. Contract chi tiết trong GUIDE.md."""
+    system_prompt = getattr(tools, "system_prompt", SYSTEM_PROMPT)
+    schemas = getattr(tools, "schemas", SCHEMAS)
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": question},
     ]
     trace = []
@@ -60,7 +62,7 @@ def run_agent(question, provider, tools, max_steps=6):
     while step < max_steps:
         step += 1
         try:
-            response = provider.complete(messages, SCHEMAS)
+            response = provider.complete(messages, schemas)
         except Exception as exc:
             trace.append(
                 {
